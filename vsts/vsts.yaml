@@ -4,9 +4,8 @@ resources:
   clean: true
 phases:
 
-### Linux build ###
 - phase: LINUX
-  displayName: Linux
+  displayName: Linux Build
 
   condition: succeeded()
   queue:
@@ -116,39 +115,34 @@ phases:
 
     condition: always()
 
-### Windows build ###
-
 - phase: WINDOWS
-  displayName: Windows
-# Uncomment to serialize builds:
-#  dependsOn: LINUX
+  displayName: Windows Build
+  # Uncomment to serialize builds:
+  #  dependsOn: LINUX
 
   condition: succeeded()
   queue:
     name: Hosted VS2017
     timeoutInMinutes: 180
   steps:
+
   - script: |
        call "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise\\Common7\\Tools\\VsDevCmd.bat"
        sn -Vr *,31bf3856ad364e35
-
     displayName: 'Disable strong name validation'
 
   - script: |
        choco install -y squid
-
     displayName: 'Install Squid'
 
   - script: |
        choco install -y netfx-4.5.2-devpack
-
     displayName: 'Install .NET 4.5.2 Targetting Pack'
 
   - powershell: ./vsts/manual_checkout.ps1
     displayName: 'GIT checkout'
     env:
       COMMIT_FROM: $(COMMIT_FROM)
-
   - script: |
        rem Run dotnet first experience.
        dotnet new
@@ -202,49 +196,36 @@ phases:
     displayName: 'Copy TRX files to the artifacts folder'
     inputs:
       SourceFolder: '$(Build.SourcesDirectory)'
-
       Contents: '**/*.trx'
-
       TargetFolder: '$(Build.ArtifactStagingDirectory)'
-
     condition: always()
 
   - task: CopyFiles@2
     displayName: 'Copy ETL files to the artifacts folder'
     inputs:
       SourceFolder: '$(Build.SourcesDirectory)'
-
       Contents: '**/*.etl'
-
       TargetFolder: '$(Build.ArtifactStagingDirectory)'
-
     condition: always()
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact: testresults'
     inputs:
       ArtifactName: testresults_windows
-
     condition: always()
 
   - task: PublishTestResults@2
     displayName: 'Publish Test Results **/*.trx'
     inputs:
       testRunner: VSTest
-
       testResultsFiles: '**/*.trx'
-
       testRunTitle: 'Windows Tests'
-
       platform: Windows
-
       configuration: 'Debug UT + Release E2E'
-
     condition: always()
 
-### WINDOWS Analyzers ###
 - phase: Analyzers
-  displayName: Analyzers
+  displayName: Windows Analyzers
 
   condition: succeeded()
   queue:
@@ -344,7 +325,7 @@ phases:
     # TODO #181 Enable post analysis to break builds after all above items are enabled.
     enabled: false
 
-# END: SDL and Compliance tasks #
+  # END: SDL and Compliance tasks #
 
 - phase: NETMF
   displayName: NetMF
@@ -384,7 +365,7 @@ phases:
        vsts/windows_csharp_deviceexplorer.cmd
     displayName: build
 
-# BEGIN: SDL and Compliance tasks #
+  # BEGIN: SDL and Compliance tasks #
 
   - task: ComponentGovernanceComponentDetection@0
     displayName: 'Component Detection'
@@ -464,4 +445,4 @@ phases:
     # TODO #181 Enable post analysis to break builds after all above items are enabled.
     enabled: false
 
-# END: SDL and Compliance tasks #
+  # END: SDL and Compliance tasks #
