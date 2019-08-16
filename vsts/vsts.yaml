@@ -145,7 +145,7 @@ phases:
 
   - powershell: ./vsts/manual_checkout.ps1
     displayName: 'GIT checkout'
-    condition: eq(coalesce(variables.release, False), False) # TEMP
+    condition: always()
     env:
       COMMIT_FROM: $(COMMIT_FROM)
 
