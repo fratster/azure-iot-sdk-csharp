@@ -117,44 +117,12 @@ phases:
 - phase: WINDOWS
   displayName: Windows Build
   condition: succeeded()
-  queue:
-    name: Hosted VS2017
-    timeoutInMinutes: 180
-
   steps:
 
   - checkout: self  # self represents the repo where the initial Pipelines YAML file was found
     persistCredentials: 'true'  # set to 'true' to leave the OAuth token in the Git config after the initial fetch
     clean: true
 
-  - script: |
-       call "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise\\Common7\\Tools\\VsDevCmd.bat"
-       sn -Vr *,31bf3856ad364e35
-    displayName: 'Disable strong name validation'
-    condition: eq(coalesce(variables.release, False), False) # TEMP
-
-  - script: |
-       choco install -y squid
-    displayName: 'Install Squid'
-    condition: eq(coalesce(variables.release, False), False) # TEMP
-
-  - script: |
-       choco install -y netfx-4.5.2-devpack
-    displayName: 'Install .NET 4.5.2 Targeting Pack'
-    condition: eq(coalesce(variables.release, False), False) # TEMP
-
-  - powershell: ./vsts/manual_checkout.ps1
-    displayName: 'GIT checkout'
-    condition: always()
-    env:
-      COMMIT_FROM: $(COMMIT_FROM)
-
-  - powershell: |
-      Set-Location $(Build.SourcesDirectory)
-      .\build.ps1 -clean -configuration Debug
-    displayName: '.\build.ps1 -clean -configuration Debug'
-    condition: always()
-    
   - task: EsrpClientTool@1
     condition: eq(coalesce(variables.release, False), True) # Release
   
@@ -188,6 +156,34 @@ phases:
     displayName: 'Install Signing Certificates'
     env:
         certpwd: $(certpassphrase)
+
+  - script: |
+       call "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise\\Common7\\Tools\\VsDevCmd.bat"
+       sn -Vr *,31bf3856ad364e35
+    displayName: 'Disable strong name validation'
+    condition: eq(coalesce(variables.release, False), False) # TEMP
+
+  - script: |
+       choco install -y squid
+    displayName: 'Install Squid'
+    condition: eq(coalesce(variables.release, False), False) # TEMP
+
+  - script: |
+       choco install -y netfx-4.5.2-devpack
+    displayName: 'Install .NET 4.5.2 Targeting Pack'
+    condition: eq(coalesce(variables.release, False), False) # TEMP
+
+  - powershell: ./vsts/manual_checkout.ps1
+    displayName: 'GIT checkout'
+    condition: always()
+    env:
+      COMMIT_FROM: $(COMMIT_FROM)
+
+  - powershell: |
+      Set-Location $(Build.SourcesDirectory)
+      .\build.ps1 -clean -configuration Debug
+    displayName: '.\build.ps1 -clean -configuration Debug'
+    condition: always()
 
   - powershell: |
       # comments transliterate in yaml and powershell
