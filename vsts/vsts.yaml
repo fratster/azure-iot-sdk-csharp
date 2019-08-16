@@ -187,8 +187,8 @@ phases:
       Set-Location $(Build.StagingDirectory)
       Write-Host "FOO" + $(Build.StagingDirectory)
       tree /f /a
-      Set-Location $(Build.ArtifactsDirectory)
-      Write-Host "FOO" + $(Build.ArtifactsDirectory)
+      Set-Location $(System.ArtifactsDirectory)
+      Write-Host "FOO" + $(System.ArtifactsDirectory)
       tree /f /a
 
       #.\build.ps1 -clean -configuration Debug
