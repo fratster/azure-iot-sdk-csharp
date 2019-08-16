@@ -6,7 +6,7 @@ phases:
 
 - phase: LINUX
   displayName: Linux Build
-  condition: eq(coalesce(variables.release, False), False)
+  condition: eq(coalesce(variables.release, False), False) # TEMP
   queue:
     name: Hosted Ubuntu 1604
     timeoutInMinutes: 180
@@ -123,45 +123,92 @@ phases:
 
   steps:
 
+  - checkout: none  # self represents the repo where the initial Pipelines YAML file was found
+    persistCredentials: 'true'  # set to 'true' to leave the OAuth token in the Git config after the initial fetch
+    clean: 'resources'
+
   - script: |
        call "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise\\Common7\\Tools\\VsDevCmd.bat"
        sn -Vr *,31bf3856ad364e35
     displayName: 'Disable strong name validation'
+    condition: eq(coalesce(variables.release, False), False) # TEMP
 
   - script: |
        choco install -y squid
     displayName: 'Install Squid'
+    condition: eq(coalesce(variables.release, False), False) # TEMP
 
   - script: |
        choco install -y netfx-4.5.2-devpack
-    displayName: 'Install .NET 4.5.2 Targetting Pack'
+    displayName: 'Install .NET 4.5.2 Targeting Pack'
+    condition: eq(coalesce(variables.release, False), False) # TEMP
 
   - powershell: ./vsts/manual_checkout.ps1
     displayName: 'GIT checkout'
+    condition: eq(coalesce(variables.release, False), False) # TEMP
     env:
       COMMIT_FROM: $(COMMIT_FROM)
 
-  - script: |
-       rem Run dotnet first experience.
-       dotnet new
+  - powershell: |
+      Set-Location $(Build.SourcesDirectory)
+      .\build.ps1 -clean -configuration Debug
+    displayName: '.\build.ps1 -clean -configuration Debug'
+    condition: always()
+    
+  - task: EsrpClientTool@1
+    condition: eq(coalesce(variables.release, False), True) # Release
+  
+  - task: DownloadBuildArtifacts@0
+    condition: eq(coalesce(variables.release, False), True) # Release
+    inputs:
+      buildType: 'specific'
+      project: 'f9b79625-2860-4d92-a4ee-57b03fabfd10' # azure-iot-sdks
+      pipeline: '311' # iot-sdks-internals-scripts-clone pipeline
+      buildVersionToDownload: 'latest'
+      downloadType: 'single'
+      downloadPath: '$(System.ArtifactsDirectory)/scripts'
+      artifactName: 'csharp'
 
-       rem List active docker containers
-       docker ps -a
+  - task: DownloadSecureFile@1
+    condition: eq(coalesce(variables.release, False), True) # Release
+    displayName: 'Download secure file - iothubsdksign-auth-base64.pfx'
+    inputs:
+      secureFile: 'iothubsdksign-auth-base64.pfx'
 
-       rem Start
+  - task: DownloadSecureFile@1
+    condition: eq(coalesce(variables.release, False), True) # Release
+    displayName: 'Download secure file - iothubsdksign-req-base64.pfx'
+    inputs:
+      secureFile: 'iothubsdksign-req-base64.pfx'
 
-       rem Start ETL logging
-       logman create trace IotTrace -o iot.etl -pf tools/CaptureLogs/iot_providers.txt
-       logman start IotTrace
+  - task: PowerShell@2
+    condition: eq(coalesce(variables.release, False), True) # Release
+    inputs:
+      filePath: '$(Build.StagingDirectory)/scripts/csharp/vsts/install-signing-certificates.ps1'
+    displayName: 'Install Signing Certificates'
+    env:
+        certpwd: $(certpassphrase)
 
-       rem Start build
-       ECHO vsts/windows_csharp.cmd
+  - powershell: |
+      # comments transliterate in yaml and powershell
+      . $(Build.StagingDirectory)/build-tools/csharp/new/SignTools.ps1
+      md $env:ESRP_LOG_DIR
+      md $env:AZURE_IOT_LOCALPACKAGES
+      Set-Location $(Build.SourcesDirectory)
+      $(Build.SourcesDirectory)/build.ps1 -configuration Release -sign -verbosity d
+    displayName: 'Build, Package, Sign'
+    condition: eq(coalesce(variables.release, False), True) # Release
+    env:
+        ESRP_AUTH_CONFIG: $(Build.StagingDirectory)/build-tools/csharp/new/json/Auth.json
+        ESRP_POLICY_CONFIG: $(Build.StagingDirectory)/build-tools/csharp/new/json/Policy.json
+        ESRP_INPUT_JSON_DIR: $(Build.StagingDirectory)/build-tools/csharp/new/json
+        ESRP_LOG_DIR: $(Build.StagingDirectory)/build-tools/csharp/new/logs
+        AZURE_IOT_LOCALPACKAGES: $(Build.StagingDirectory)/build-tools/csharp/nuget_local
 
-       ren Stop ETL logging
-       logman stop IotTrace
-       logman delete IotTrace
-
-    displayName: build
+  - powershell: |
+      Write-Host "Hola Mundo"
+    displayName: Standard Build
+    condition: eq(coalesce(variables.release, False), False)
     env:
       IOTHUB_CONN_STRING_CSHARP: $(IOTHUB-CONN-STRING-CSHARP)
       IOTHUB_PFX_X509_THUMBPRINT: $(IOTHUB-PFX-X509-THUMBPRINT)
@@ -189,6 +236,14 @@ phases:
       LA_AAD_APP_ID: $(LA-AAD-APP-ID)
       LA_AAD_APP_CERT_BASE64: $(LA-AAD-APP-CERT-BASE64)
       LA_WORKSPACE_ID: $(LA-WORKSPACE-ID)
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Signed Nuget Packages'
+    condition: eq(coalesce(variables.release, False), True) # Release
+    inputs:
+        PathtoPublish: '$(Build.SourcesDirectory)/bin/pkg'
+        ArtifactName: 'nuget'
+        publishLocation: 'Container'
 
   - task: CopyFiles@2
     displayName: 'Copy TRX files to the artifacts folder'
@@ -224,7 +279,7 @@ phases:
 
 - phase: Analyzers
   displayName: Windows Analyzers
-  condition: eq(coalesce(variables.release, False), False)
+  condition: eq(coalesce(variables.release, False), False) # TEMP
   queue:
     name: Hosted VS2017
     timeoutInMinutes: 60
@@ -326,7 +381,7 @@ phases:
 
 - phase: NETMF
   displayName: NetMF
-  condition: eq(coalesce(variables.release, False), False)
+  condition: eq(coalesce(variables.release, False), False) # TEMP
   queue:
     name: win
     timeoutInMinutes: 1
@@ -344,7 +399,7 @@ phases:
 
 - phase: DEVEXP
   displayName: csharp-deviceexplorer
-  condition: eq(coalesce(variables.release, False), False)
+  condition: eq(coalesce(variables.release, False), False) # TEMP
   queue:
     name: win
     timeoutInMinutes: 15
