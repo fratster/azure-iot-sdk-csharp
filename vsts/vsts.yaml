@@ -123,9 +123,9 @@ phases:
 
   steps:
 
-  - checkout: none  # self represents the repo where the initial Pipelines YAML file was found
+  - checkout: self  # self represents the repo where the initial Pipelines YAML file was found
     persistCredentials: 'true'  # set to 'true' to leave the OAuth token in the Git config after the initial fetch
-    clean: 'resources'
+    clean: true
 
   - script: |
        call "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise\\Common7\\Tools\\VsDevCmd.bat"
@@ -143,9 +143,7 @@ phases:
     displayName: 'Install .NET 4.5.2 Targeting Pack'
     condition: eq(coalesce(variables.release, False), False) # TEMP
 
-  - powershell: |
-      Set-Location $(Build.SourcesDirectory)
-      ./vsts/manual_checkout.ps1
+  - powershell: ./vsts/manual_checkout.ps1
     displayName: 'GIT checkout'
     condition: always()
     env:
