@@ -173,11 +173,11 @@ phases:
     displayName: 'Install .NET 4.5.2 Targeting Pack'
     condition: eq(coalesce(variables.release, False), False) # TEMP
 
-  - powershell: ./vsts/manual_checkout.ps1
-    displayName: 'GIT checkout'
-    condition: always()
-    env:
-      COMMIT_FROM: $(COMMIT_FROM)
+  #  - powershell: ./vsts/manual_checkout.ps1
+  #    displayName: 'GIT checkout'
+  #    condition: always()
+  #    env:
+  #      COMMIT_FROM: $(COMMIT_FROM)
 
   - powershell: |
       Set-Location $(Build.SourcesDirectory)
