@@ -6,8 +6,7 @@ phases:
 
 - phase: LINUX
   displayName: Linux Build
-
-  condition: succeeded()
+  condition: eq(coalesce(variables.release, False), False)
   queue:
     name: Hosted Ubuntu 1604
     timeoutInMinutes: 180
@@ -117,13 +116,11 @@ phases:
 
 - phase: WINDOWS
   displayName: Windows Build
-  # Uncomment to serialize builds:
-  #  dependsOn: LINUX
-
   condition: succeeded()
   queue:
     name: Hosted VS2017
     timeoutInMinutes: 180
+
   steps:
 
   - script: |
@@ -143,6 +140,7 @@ phases:
     displayName: 'GIT checkout'
     env:
       COMMIT_FROM: $(COMMIT_FROM)
+
   - script: |
        rem Run dotnet first experience.
        dotnet new
@@ -157,7 +155,7 @@ phases:
        logman start IotTrace
 
        rem Start build
-       vsts/windows_csharp.cmd
+       ECHO vsts/windows_csharp.cmd
 
        ren Stop ETL logging
        logman stop IotTrace
@@ -226,8 +224,7 @@ phases:
 
 - phase: Analyzers
   displayName: Windows Analyzers
-
-  condition: succeeded()
+  condition: eq(coalesce(variables.release, False), False)
   queue:
     name: Hosted VS2017
     timeoutInMinutes: 60
@@ -329,8 +326,7 @@ phases:
 
 - phase: NETMF
   displayName: NetMF
-
-  condition: succeeded()
+  condition: eq(coalesce(variables.release, False), False)
   queue:
     name: win
     timeoutInMinutes: 1
@@ -348,8 +344,7 @@ phases:
 
 - phase: DEVEXP
   displayName: csharp-deviceexplorer
-
-  condition: succeeded()
+  condition: eq(coalesce(variables.release, False), False)
   queue:
     name: win
     timeoutInMinutes: 15
