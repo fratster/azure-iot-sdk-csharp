@@ -180,9 +180,10 @@ phases:
   #      COMMIT_FROM: $(COMMIT_FROM)
 
   - powershell: |
-      Set-Location $(Build.SourcesDirectory)
-      .\build.ps1 -clean -configuration Debug
-    displayName: '.\build.ps1 -clean -configuration Debug'
+      tree /f /a
+      #Set-Location $(Build.SourcesDirectory)
+      #.\build.ps1 -clean -configuration Debug
+    displayName: '.\bu)ild.ps1 -clean -configuration Debug'
     condition: always()
 
   - powershell: |
