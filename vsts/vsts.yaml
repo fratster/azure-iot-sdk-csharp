@@ -181,9 +181,18 @@ phases:
 
   - powershell: |
       tree /f /a
-      #Set-Location $(Build.SourcesDirectory)
+      Set-Location $(Build.SourcesDirectory)
+      Write-Host "FOO" + $(Build.SourcesDirectory)
+      tree /f /a
+      Set-Location $(Build.StagingDirectory)
+      Write-Host "FOO" + $(Build.StagingDirectory)
+      tree /f /a
+      Set-Location $(Build.ArtifactsDirectory)
+      Write-Host "FOO" + $(Build.ArtifactsDirectory)
+      tree /f /a
+
       #.\build.ps1 -clean -configuration Debug
-    displayName: '.\bu)ild.ps1 -clean -configuration Debug'
+    displayName: build.ps1 -clean -configuration Debug
     condition: always()
 
   - powershell: |
