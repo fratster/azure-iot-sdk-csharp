@@ -2,6 +2,8 @@ name: $(BuildID)_$(BuildDefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Re
 resources:
 - repo: self
   clean: true
+variables:
+  release: eq(coalesce(variables.release, False), True) # Release
 phases:
 
 - phase: LINUX
@@ -173,12 +175,6 @@ phases:
     displayName: 'Install .NET 4.5.2 Targeting Pack'
     condition: eq(coalesce(variables.release, False), False) # TEMP
 
-  #  - powershell: ./vsts/manual_checkout.ps1
-  #    displayName: 'GIT checkout'
-  #    condition: always()
-  #    env:
-  #      COMMIT_FROM: $(COMMIT_FROM)
-
   - powershell: .\build.ps1 -clean -configuration Debug
     displayName: Test Debug Build
     condition: always()
@@ -198,6 +194,12 @@ phases:
         ESRP_INPUT_JSON_DIR: $(Build.StagingDirectory)/scripts/csharp/new/json
         ESRP_LOG_DIR: $(Build.StagingDirectory)/scripts/csharp/new/logs
         AZURE_IOT_LOCALPACKAGES: $(Build.StagingDirectory)/scripts/csharp/nuget_local
+
+  - powershell: ./vsts/manual_checkout.ps1
+    displayName: 'GIT checkout'
+    condition: eq(coalesce(variables.release, False), False)
+    env:
+      COMMIT_FROM: $(COMMIT_FROM)
 
   - powershell: Write-Host "Hola Mundo"
     displayName: Standard Build
