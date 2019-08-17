@@ -131,7 +131,7 @@ phases:
     inputs:
       buildType: 'specific'
       project: 'f9b79625-2860-4d92-a4ee-57b03fabfd10' # azure-iot-sdks
-      pipeline: $(variables.scriptspipeline) # scripts pipeline
+      pipeline: $(scriptspipeline) # scripts pipeline
       buildVersionToDownload: 'latest'
       downloadType: 'single'
       downloadPath: '$(System.ArtifactsDirectory)\scripts'
