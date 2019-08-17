@@ -2,9 +2,6 @@ name: $(BuildID)_$(BuildDefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Re
 resources:
 - repo: self
   clean: true
-variables:
-  releaseBuild: eq(coalesce(variables.release, False), True)
-
 phases:
 
 - phase: LINUX
