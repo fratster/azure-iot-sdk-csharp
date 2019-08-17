@@ -124,7 +124,7 @@ phases:
     clean: true
 
   - task: EsrpClientTool@1
-    condition: $(releaseBuild) # Release
+    condition: eq(coalesce(variables.release, False), True) # Release
   
   - task: DownloadBuildArtifacts@0
     condition: eq(coalesce(variables.release, False), True) # Release
