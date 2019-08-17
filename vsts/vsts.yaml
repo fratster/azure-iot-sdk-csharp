@@ -3,7 +3,8 @@ resources:
 - repo: self
   clean: true
 variables:
-  release: eq(coalesce(variables.release, False), True) # Release
+  releaseBuild: eq(coalesce(variables.release, False), True)
+
 phases:
 
 - phase: LINUX
@@ -126,17 +127,17 @@ phases:
     clean: true
 
   - task: EsrpClientTool@1
-    condition: eq(coalesce(variables.release, False), True) # Release
+    condition: $(releaseBuild) # Release
   
   - task: DownloadBuildArtifacts@0
     condition: eq(coalesce(variables.release, False), True) # Release
     inputs:
       buildType: 'specific'
       project: 'f9b79625-2860-4d92-a4ee-57b03fabfd10' # azure-iot-sdks
-      pipeline: '311' # iot-sdks-internals-scripts-clone pipeline
+      pipeline: $(variables.scriptspipeline) # scripts pipeline
       buildVersionToDownload: 'latest'
       downloadType: 'single'
-      downloadPath: '$(System.ArtifactsDirectory)/scripts'
+      downloadPath: '$(System.ArtifactsDirectory)\scripts'
       artifactName: 'csharp'
 
   - task: DownloadSecureFile@1
@@ -180,13 +181,14 @@ phases:
     condition: always()
 
   - powershell: |
-      # powershell and yaml comments transliterate
       . $(Build.StagingDirectory)/scripts/csharp/new/SignTools.ps1
+
       md $env:ESRP_LOG_DIR
       md $env:AZURE_IOT_LOCALPACKAGES
       Set-Location $(Build.SourcesDirectory)
+
       $(Build.SourcesDirectory)/build.ps1 -configuration Release -sign -verbosity d
-    displayName: Release Build
+    displayName: Signed Build
     condition: eq(coalesce(variables.release, False), True) # Release
     env:
         ESRP_AUTH_CONFIG: $(Build.StagingDirectory)/scripts/csharp/new/json/Auth.json
@@ -201,8 +203,9 @@ phases:
     env:
       COMMIT_FROM: $(COMMIT_FROM)
 
-  - powershell: Write-Host "Hola Mundo"
-    displayName: Standard Build
+  - powershell: |
+      Write-Host "Hola Mundo"
+    displayName: Unsigned Build
     condition: eq(coalesce(variables.release, False), False)
     env:
       IOTHUB_CONN_STRING_CSHARP: $(IOTHUB-CONN-STRING-CSHARP)
