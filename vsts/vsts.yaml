@@ -161,17 +161,14 @@ phases:
        call "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise\\Common7\\Tools\\VsDevCmd.bat"
        sn -Vr *,31bf3856ad364e35
     displayName: 'Disable strong name validation'
-    condition: eq(coalesce(variables.release, False), False) # TEMP
 
   - script: |
        choco install -y squid
     displayName: 'Install Squid'
-    condition: eq(coalesce(variables.release, False), False) # TEMP
 
   - script: |
        choco install -y netfx-4.5.2-devpack
     displayName: 'Install .NET 4.5.2 Targeting Pack'
-    condition: eq(coalesce(variables.release, False), False) # TEMP
 
   - powershell: .\build.ps1 -clean -configuration Debug
     displayName: Test Debug Build
@@ -196,14 +193,31 @@ phases:
 
   - powershell: ./vsts/manual_checkout.ps1
     displayName: 'GIT checkout'
-    condition: eq(coalesce(variables.release, False), False)
+    condition: eq(coalesce(variables.release, False), False) # Not Release
     env:
       COMMIT_FROM: $(COMMIT_FROM)
 
-  - powershell: |
-      Write-Host "Hola Mundo"
+  - script: |
+      rem Run dotnet first experience.
+      dotnet new
+
+      rem List active docker containers
+      docker ps -a
+
+      rem Start
+
+      rem Start ETL logging
+      logman create trace IotTrace -o iot.etl -pf tools/CaptureLogs/iot_providers.txt
+      logman start IotTrace
+
+      rem Start build
+      vsts/windows_csharp.cmd
+
+      ren Stop ETL logging
+      logman stop IotTrace
+      logman delete IotTrace
     displayName: Unsigned Build
-    condition: eq(coalesce(variables.release, False), False)
+    condition: eq(coalesce(variables.release, False), False) # Not Release
     env:
       IOTHUB_CONN_STRING_CSHARP: $(IOTHUB-CONN-STRING-CSHARP)
       IOTHUB_PFX_X509_THUMBPRINT: $(IOTHUB-PFX-X509-THUMBPRINT)
