@@ -6,7 +6,7 @@ phases:
 
 - phase: LINUX
   displayName: Linux Build
-  condition: eq(coalesce(variables.release, False), False) # TEMP
+  condition: eq(coalesce(variables.test, False), False) # TEMP
   queue:
     name: Hosted Ubuntu 1604
     timeoutInMinutes: 180
@@ -117,6 +117,9 @@ phases:
 - phase: WINDOWS
   displayName: Windows Build
   condition: succeeded()
+  queue:
+    name: Hosted VS2017
+    timeoutInMinutes: 180
   steps:
 
   - checkout: self  # self represents the repo where the initial Pipelines YAML file was found
@@ -172,7 +175,7 @@ phases:
 
   - powershell: .\build.ps1 -clean -configuration Debug
     displayName: Test Debug Build
-    condition: always()
+    condition: eq(coalesce(variables.test, False), False) # TEMP
 
   - powershell: |
       . $(Build.StagingDirectory)/scripts/csharp/new/SignTools.ps1
@@ -288,7 +291,7 @@ phases:
 
 - phase: Analyzers
   displayName: Windows Analyzers
-  condition: eq(coalesce(variables.release, False), False) # TEMP
+  condition: eq(coalesce(variables.test, False), False) # TEMP
   queue:
     name: Hosted VS2017
     timeoutInMinutes: 60
@@ -390,7 +393,7 @@ phases:
 
 - phase: NETMF
   displayName: NetMF
-  condition: eq(coalesce(variables.release, False), False) # TEMP
+  condition: eq(coalesce(variables.test, False), False) # TEMP
   queue:
     name: win
     timeoutInMinutes: 1
@@ -408,7 +411,7 @@ phases:
 
 - phase: DEVEXP
   displayName: csharp-deviceexplorer
-  condition: eq(coalesce(variables.release, False), False) # TEMP
+  condition: eq(coalesce(variables.test, False), False) # TEMP
   queue:
     name: win
     timeoutInMinutes: 15
