@@ -130,7 +130,7 @@ phases:
     condition: eq(coalesce(variables.release, False), True) # Release
   
   - task: DownloadBuildArtifacts@0
-    condition: and(succeeded(), eq(coalesce(variables.release, False), True)) # Release
+    condition: eq(coalesce(variables.release, False), True) # Release
     inputs:
       buildType: 'specific'
       project: 'f9b79625-2860-4d92-a4ee-57b03fabfd10' # azure-iot-sdks
@@ -153,7 +153,7 @@ phases:
       secureFile: 'iothubsdksign-req-base64.pfx'
 
   - task: PowerShell@2
-    condition: and(succeeded(), eq(coalesce(variables.release, False), True)) # Release
+    condition: eq(coalesce(variables.release, False), True) # Release
     inputs:
       filePath: '$(Build.StagingDirectory)/scripts/csharp/vsts/install-signing-certificates.ps1'
     displayName: 'Install Signing Certificates'
@@ -164,17 +164,21 @@ phases:
        call "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise\\Common7\\Tools\\VsDevCmd.bat"
        sn -Vr *,31bf3856ad364e35
     displayName: 'Disable strong name validation'
+    condition: eq(coalesce(variables.test, False), True) # TEMP
 
   - script: |
        choco install -y squid
     displayName: 'Install Squid'
+    condition: eq(coalesce(variables.test, False), True) # TEMP
 
   - script: |
        choco install -y netfx-4.5.2-devpack
     displayName: 'Install .NET 4.5.2 Targeting Pack'
+    condition: eq(coalesce(variables.test, False), True) # TEMP
 
   - powershell: .\build.ps1 -clean -configuration Debug
     displayName: Test Debug Build
+    condition: eq(coalesce(variables.test, False), True) # TEMP
 
   - powershell: |
       . $(Build.StagingDirectory)/scripts/csharp/new/SignTools.ps1
@@ -185,7 +189,7 @@ phases:
 
       $(Build.SourcesDirectory)/build.ps1 -configuration Release -sign -e2etests -verbosity d
     displayName: Signed Build
-    condition: and(succeeded(), eq(coalesce(variables.release, False), True)) # Release
+    condition: eq(coalesce(variables.release, False), True) # Release
     env:
         ESRP_AUTH_CONFIG: $(Build.StagingDirectory)/scripts/csharp/new/json/Auth.json
         ESRP_POLICY_CONFIG: $(Build.StagingDirectory)/scripts/csharp/new/json/Policy.json
@@ -221,7 +225,7 @@ phases:
 
   - powershell: ./vsts/manual_checkout.ps1
     displayName: 'GIT checkout'
-    condition: and(succeeded(), eq(coalesce(variables.release, False), False)) # Release disables
+    condition: eq(coalesce(variables.release, False), True) # Release disables
     env:
       COMMIT_FROM: $(COMMIT_FROM)
 
@@ -245,7 +249,7 @@ phases:
       logman stop IotTrace
       logman delete IotTrace
     displayName: Unsigned Build
-    condition: and(succeeded(), eq(coalesce(variables.release, False), False)) # Release disables
+    condition: eq(coalesce(variables.release, False), False) # Release disables
     env:
       IOTHUB_CONN_STRING_CSHARP: $(IOTHUB-CONN-STRING-CSHARP)
       IOTHUB_PFX_X509_THUMBPRINT: $(IOTHUB-PFX-X509-THUMBPRINT)
