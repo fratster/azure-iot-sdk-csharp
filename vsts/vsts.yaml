@@ -6,7 +6,6 @@ phases:
 
 - phase: LINUX
   displayName: Linux Build
-  condition: eq(coalesce(variables.test, False), False) # TEMP
   queue:
     name: Hosted Ubuntu 1604
     timeoutInMinutes: 180
@@ -175,7 +174,6 @@ phases:
 
   - powershell: .\build.ps1 -clean -configuration Debug
     displayName: Test Debug Build
-    condition: eq(coalesce(variables.test, False), False) # TEMP
 
   - powershell: |
       . $(Build.StagingDirectory)/scripts/csharp/new/SignTools.ps1
@@ -196,7 +194,7 @@ phases:
 
   - powershell: ./vsts/manual_checkout.ps1
     displayName: 'GIT checkout'
-    condition: eq(coalesce(variables.release, False), False) # Not Release
+    condition: eq(coalesce(variables.release, False), False) # Release disables
     env:
       COMMIT_FROM: $(COMMIT_FROM)
 
@@ -220,7 +218,7 @@ phases:
       logman stop IotTrace
       logman delete IotTrace
     displayName: Unsigned Build
-    condition: eq(coalesce(variables.release, False), False) # Not Release
+    condition: eq(coalesce(variables.release, False), False) # Release disables
     env:
       IOTHUB_CONN_STRING_CSHARP: $(IOTHUB-CONN-STRING-CSHARP)
       IOTHUB_PFX_X509_THUMBPRINT: $(IOTHUB-PFX-X509-THUMBPRINT)
@@ -291,7 +289,6 @@ phases:
 
 - phase: Analyzers
   displayName: Windows Analyzers
-  condition: eq(coalesce(variables.test, False), False) # TEMP
   queue:
     name: Hosted VS2017
     timeoutInMinutes: 60
@@ -393,7 +390,6 @@ phases:
 
 - phase: NETMF
   displayName: NetMF
-  condition: eq(coalesce(variables.test, False), False) # TEMP
   queue:
     name: win
     timeoutInMinutes: 1
@@ -411,7 +407,6 @@ phases:
 
 - phase: DEVEXP
   displayName: csharp-deviceexplorer
-  condition: eq(coalesce(variables.test, False), False) # TEMP
   queue:
     name: win
     timeoutInMinutes: 15
