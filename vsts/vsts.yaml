@@ -6,6 +6,7 @@ phases:
 
 - phase: LINUX
   displayName: Linux Build
+  condition: eq(coalesce(variables.test, False), True) # TEMP
   queue:
     name: Hosted Ubuntu 1604
     timeoutInMinutes: 180
@@ -129,7 +130,7 @@ phases:
     condition: eq(coalesce(variables.release, False), True) # Release
   
   - task: DownloadBuildArtifacts@0
-    condition: eq(coalesce(variables.release, False), True) # Release
+    condition: and(succeeded(), eq(coalesce(variables.release, False), True)) # Release
     inputs:
       buildType: 'specific'
       project: 'f9b79625-2860-4d92-a4ee-57b03fabfd10' # azure-iot-sdks
@@ -152,7 +153,7 @@ phases:
       secureFile: 'iothubsdksign-req-base64.pfx'
 
   - task: PowerShell@2
-    condition: eq(coalesce(variables.release, False), True) # Release
+    condition: and(succeeded(), eq(coalesce(variables.release, False), True)) # Release
     inputs:
       filePath: '$(Build.StagingDirectory)/scripts/csharp/vsts/install-signing-certificates.ps1'
     displayName: 'Install Signing Certificates'
@@ -184,7 +185,7 @@ phases:
 
       $(Build.SourcesDirectory)/build.ps1 -configuration Release -sign -e2etests -verbosity d
     displayName: Signed Build
-    condition: eq(coalesce(variables.release, False), True) # Release
+    condition: and(succeeded(), eq(coalesce(variables.release, False), True)) # Release
     env:
         ESRP_AUTH_CONFIG: $(Build.StagingDirectory)/scripts/csharp/new/json/Auth.json
         ESRP_POLICY_CONFIG: $(Build.StagingDirectory)/scripts/csharp/new/json/Policy.json
@@ -220,7 +221,7 @@ phases:
 
   - powershell: ./vsts/manual_checkout.ps1
     displayName: 'GIT checkout'
-    condition: eq(coalesce(variables.release, False), False) # Release disables
+    condition: and(succeeded(), eq(coalesce(variables.release, False), False)) # Release disables
     env:
       COMMIT_FROM: $(COMMIT_FROM)
 
@@ -244,7 +245,7 @@ phases:
       logman stop IotTrace
       logman delete IotTrace
     displayName: Unsigned Build
-    condition: eq(coalesce(variables.release, False), False) # Release disables
+    condition: and(succeeded(), eq(coalesce(variables.release, False), False)) # Release disables
     env:
       IOTHUB_CONN_STRING_CSHARP: $(IOTHUB-CONN-STRING-CSHARP)
       IOTHUB_PFX_X509_THUMBPRINT: $(IOTHUB-PFX-X509-THUMBPRINT)
@@ -315,6 +316,7 @@ phases:
 
 - phase: Analyzers
   displayName: Windows Analyzers
+  condition: eq(coalesce(variables.test, False), True) # TEMP
   queue:
     name: Hosted VS2017
     timeoutInMinutes: 60
@@ -416,6 +418,7 @@ phases:
 
 - phase: NETMF
   displayName: NetMF
+  condition: eq(coalesce(variables.test, False), True) # TEMP
   queue:
     name: win
     timeoutInMinutes: 1
@@ -433,6 +436,7 @@ phases:
 
 - phase: DEVEXP
   displayName: csharp-deviceexplorer
+  condition: eq(coalesce(variables.test, False), True) # TEMP
   queue:
     name: win
     timeoutInMinutes: 15
