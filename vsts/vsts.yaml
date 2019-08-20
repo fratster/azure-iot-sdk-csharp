@@ -118,9 +118,6 @@ phases:
   ### Windows build ###
 
 - phase: Phase_1
-  queue:
-    name: Hosted VS2017
-    timeoutInMinutes: 180
   steps:
 
   - task: EsrpClientTool@1
