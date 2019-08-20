@@ -126,11 +126,11 @@ phases:
   - task: DownloadBuildArtifacts@0
     inputs:
       buildType: 'specific'
-      project: 'f9b79625-2860-4d92-a4ee-57b03fabfd10'
-      pipeline: '296'
+      project: 'f9b79625-2860-4d92-a4ee-57b03fabfd10' # azure-iot-sdks
+      pipeline: $(scriptspipeline) # scripts pipeline
       buildVersionToDownload: 'latest'
       downloadType: 'single'
-      downloadPath: '$(System.ArtifactsDirectory)/build-tools'
+      downloadPath: '$(System.ArtifactsDirectory)\scripts'
       artifactName: 'csharp'
 
   - checkout: self  # self represents the repo where the initial Pipelines YAML file was found
@@ -146,14 +146,7 @@ phases:
     displayName: 'Download secure file - iothubsdksign-req-base64.pfx'
     inputs:
       secureFile: 'iothubsdksign-req-base64.pfx'
-
-  - task: CmdLine@2
-    displayName: 'env vars'
-    inputs:
-        script: 'set'
-
-  # install signing certificates
-
+      
   - powershell: |
         function Import-Certificate($Cert, [System.Security.SecureString]$Passphrase, $Store) {
             
