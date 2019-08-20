@@ -135,10 +135,6 @@ phases:
       downloadPath: '$(System.ArtifactsDirectory)\scripts'
       artifactName: 'csharp'
 
-  - checkout: self  # self represents the repo where the initial Pipelines YAML file was found
-    persistCredentials: 'true'  # set to 'true' to leave the OAuth token in the Git config after the initial fetch
-    clean: 'resources'
-
   - task: DownloadSecureFile@1
     displayName: 'Download secure file - iothubsdksign-auth-base64.pfx'
     inputs:
